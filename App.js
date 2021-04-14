@@ -10,7 +10,6 @@ import { BottomTabs } from './navigation'
 const Stack = createStackNavigator();
 
 const App = () => {
-
 	return (
 		<NavigationContainer>
 			<Stack.Navigator initialRouteName="Beranda" screenOptions={{ headerShown: false }}>

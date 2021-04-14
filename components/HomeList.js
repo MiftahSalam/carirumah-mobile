@@ -75,7 +75,7 @@ const HomeList = props => {
                 keyExtractor={(item) => item.property_name}
                 style={{
                     margin: 10,
-                    marginBottom: SIZES.BOTTOM_TAB_MARGIN
+                    marginBottom: SIZES.BOTTOM_TAB_MARGIN-60
                 }}
                 showsVerticalScrollIndicator={false}
                 refreshing={loading}

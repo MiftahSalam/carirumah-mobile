@@ -9,6 +9,7 @@ export const pin = require("../assets/icons/pin.png");
 export const red_pin = require("../assets/icons/red-pin.png");
 export const star = require("../assets/icons/star.png");
 export const user = require("../assets/icons/user.png");
+export const search = require("../assets/icons/search.png");
 
 export default {
   back,
@@ -22,4 +23,5 @@ export default {
   red_pin,
   star,
   user,
+  search,
 };

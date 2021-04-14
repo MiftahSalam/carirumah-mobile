@@ -2,10 +2,10 @@ import React from 'react'
 import { View, StatusBar, SafeAreaView } from 'react-native';
 import { Searchbar, Text } from 'react-native-paper'
 import ButtonToggleGroup from 'react-native-button-toggle-group'
-// import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 
 import { GOOGLE_API_KEY, SIZES } from '../constants'
 import { api_getPropertyBySearch } from '../api/property'
+import { api_getLocationReverse } from '../api/location'
 import { HomeList } from '../components'
 
 const Search = ({ navigation }) => {
@@ -14,6 +14,14 @@ const Search = ({ navigation }) => {
 	const [items, setItems] = React.useState([])
     const [loading, setLoading] = React.useState(true)
 
+	React.useEffect(() => {
+		api_getLocationReverse(locationResult,'-6.8495568,107.5117769')
+	},[])
+
+	const locationResult = (data, status) => {
+		console.log("Search -> locationResult status", status)
+		// console.log("Search -> locationResult data", data)
+	}
 	const onSearchChange = (query) => {
 		setSearchText(query)
 	}
@@ -64,7 +72,7 @@ const Search = ({ navigation }) => {
 		)
 	}
 	return (
-		<SafeAreaView style={{ paddingBottom: SIZES.BOTTOM_TAB_MARGIN*2}}>
+		<SafeAreaView style={{ paddingBottom: SIZES.BOTTOM_TAB_MARGIN+60}}>
 			{renderSearchBar()}
 			{items.length === 0 || 
 			<HomeList 
