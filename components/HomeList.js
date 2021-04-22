@@ -1,9 +1,16 @@
 import React, { useMemo } from 'react'
-import { View, Image, SafeAreaView, FlatList, StatusBar } from 'react-native'
-import { Text, Chip, Card } from 'react-native-paper'
+import { 
+    View, 
+    Image, 
+    SafeAreaView, 
+    FlatList, 
+    StatusBar,
+} from 'react-native'
+import { Text, Chip, Card, Provider, Menu, IconButton } from 'react-native-paper'
+import { Svg, Circle } from 'react-native-svg'
 
 import { api_getPropertyList } from '../api/property'
-import { BriefContent } from '../components'
+import { BriefContent, ProgresiveImage, BtnLikes } from '../components'
 import { SIZES } from '../constants'
 
 const HomeList = props => {
@@ -36,14 +43,28 @@ const HomeList = props => {
                             }}
                             onPress={() => navigation.navigate('Detail', { "item": item })}
                         >
-                            <Image
-                                source={{ uri: item.image_link?.url }}
-                                resizeMode="stretch"
+                            <View 
+                                style={{ 
+                                    top: -15,
+                                    right: -15,
+                                    position: "absolute",
+                                    zIndex: 2 
+                                }}>
+                                    <BtnLikes homeItem={item} />
+                            </View>
+                            <Svg
+                                height="70"
+                                width="70"
                                 style={{
-                                    width: "100%",
-                                    height: 200,
+                                    position: 'absolute',
+                                    right: 0,
+                                    top: 0,
+                                    zIndex: 1
                                 }}
-                            />
+                            >
+                                <Circle cx="70" cy="0" r="35" fill="white" />
+                            </Svg>
+                            <ProgresiveImage url={item.image_link?.url} />
                             <Text
                                 style={{
                                     textAlign: "center",
@@ -60,7 +81,7 @@ const HomeList = props => {
                             >{item.price}
                             </Text>
                             <BriefContent
-                                homeItem={item}
+                                homeItem={item} showMenu={true}
                             />
                         </Card>
                     }
@@ -75,22 +96,24 @@ const HomeList = props => {
                 keyExtractor={(item) => item.property_name}
                 style={{
                     margin: 10,
-                    marginBottom: SIZES.BOTTOM_TAB_MARGIN-60
+                    marginBottom: SIZES.BOTTOM_TAB_MARGIN - 60
                 }}
                 showsVerticalScrollIndicator={false}
                 refreshing={loading}
                 extraData={currentItems}
-                onRefresh={props.onRefresh? () => props.onRefresh() : () => {} }
-                onEndReached={props.onEndPage? () => props.onEndPage() : () => {}}
+                onRefresh={props.onRefresh ? () => props.onRefresh() : () => { }}
+                onEndReached={props.onEndPage ? () => props.onEndPage() : () => { }}
                 onEndReachedThreshold={0.1}
             />
         )
     }
 
     return (
-        <SafeAreaView>
-            {renderHomeList()}
-        </SafeAreaView>
+        // <Provider>
+            <SafeAreaView>
+                {renderHomeList()}
+            </SafeAreaView>
+        // </Provider>  
     )
 }
 

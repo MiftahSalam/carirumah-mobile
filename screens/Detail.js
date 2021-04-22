@@ -1,69 +1,46 @@
 import React from 'react'
-import { View, Image, SafeAreaView, StatusBar } from 'react-native';
+import { View, Image, SafeAreaView, StatusBar, DeviceEventEmitter } from 'react-native';
 import { Text, Button, Chip, Card, ActivityIndicator, DataTable, Colors } from 'react-native-paper'
 import Animated from 'react-native-reanimated';
-import { SIZES, COLORS } from '../constants';
+import { Circle, Svg } from 'react-native-svg'
 
-import { BriefContent } from '../components'
+import { SIZES, COLORS } from '../constants';
+import { BriefContent, ProgresiveImage, BtnLikes } from '../components'
 import { ScrollView } from 'react-native-gesture-handler';
 import { getPropertyStatus } from '../utils/utils'
 import { api_getPropertyDetail } from '../api/property'
 import MapLoc from './MapLoc'
 
-const ProgresiveImage = ({ url }) => {
-	const [loading, setLoading] = React.useState(true)
-
-	return (
-		<View>
-			<Image
-				source={{ uri: url }}
-				resizeMode="cover"
-				onLoadStart={() => setLoading(true)}
-				onLoadEnd={() => setLoading(false)}
-				style={{
-					width: SIZES.width,
-					height: "100%"
-				}}
-			/>
-			{/* {console.log("loading state: ", loading)} */}
-			{loading &&
-				<View
-					style={{
-						position: "absolute",
-						left: 0,
-						right: 0,
-						top: 0,
-						bottom: 0,
-						opacity: 0.7,
-						backgroundColor: "black",
-						justifyContent: "center",
-						alignItems: "center"
-					}}
-				>
-					<ActivityIndicator size="small" color="#FFD700" />
-				</View>
-			}
-		</View>
-	)
-}
-
 const Detail = ({ route, navigation }) => {
 	const [pageNum, setPageNum] = React.useState(1)
-    const [loading, setLoading] = React.useState(true)
+	const [loading, setLoading] = React.useState(true)
 	const [itemDetail, setItemDetail] = React.useState({})
 	const item = route.params.item
 
 	React.useEffect(() => {
-		console.log("Detail -> useEffect")
+		console.log("Detail -> useEffect init")
 		setLoading(true)
-		api_getPropertyDetail(itemDetailCallback,item.id)
-	},[])
+		api_getPropertyDetail(itemDetailCallback, item.id)
+	}, [])
+    React.useEffect(() => {
+        navigation.addListener('beforeRemove', () => {
+			console.log("Detail -> useEffect add navigation listener")
+			DeviceEventEmitter.emit(`BtnLikes.${item.id}.event.press`)
+		})
+
+		return () => {
+			console.log("Detail -> useEffect remove navigation listener")
+			navigation.removeListener('beforeRemove')
+		}
+    }
+    ,[navigation])
+
 	const itemDetailCallback = (data, status) => {
 		console.log("Detail -> itemDetailCallback -> status: ", status)
-        if (status === 200) {
-            setItemDetail(data)
-        }
-        setLoading(false)
+		if (status === 200) {
+			setItemDetail(data)
+		}
+		setLoading(false)
 	}
 	function calcImgViewPage(e) {
 		let dimensions_width = e.nativeEvent.layoutMeasurement.width
@@ -80,6 +57,27 @@ const Detail = ({ route, navigation }) => {
 					// marginTop: 30
 				}}
 			>
+				<View
+					style={{
+						top: -15,
+						right: -15,
+						position: "absolute",
+						zIndex: 3
+					}}>
+					<BtnLikes homeItem={item} />
+				</View>
+				<Svg
+					height="70"
+					width="70"
+					style={{
+						position: 'absolute',
+						right: 0,
+						top: 0,
+						zIndex: 1
+					}}
+				>
+					<Circle cx="70" cy="0" r="35" fill="white" />
+				</Svg>
 				<Animated.ScrollView
 					horizontal
 					pagingEnabled
@@ -92,9 +90,7 @@ const Detail = ({ route, navigation }) => {
 						itemDetail.images?.map((item, index) => {
 							return (
 								<View key={`image-${index}`} style={{ alignItem: "center" }}>
-									<View style={{ height: 200 }}>
-										<ProgresiveImage url={item.url} />
-									</View>
+									<ProgresiveImage url={item.url} />
 								</View>
 							)
 						})
@@ -104,7 +100,7 @@ const Detail = ({ route, navigation }) => {
 					style={{
 						flex: 1,
 						position: "absolute",
-						width: 50,
+						width: 70,
 						height: 20,
 						alignItems: "center",
 						justifyContent: "center",
@@ -150,39 +146,66 @@ const Detail = ({ route, navigation }) => {
 				<Text style={{ margin: 10, fontWeight: "bold" }}>Informasi Property</Text>
 				<DataTable
 				>
-					<DataTable.Row>
-						<DataTable.Cell>Jumlah Lantai</DataTable.Cell>
-						<DataTable.Cell><Text style={{ color: COLORS.darkgray }} >2</Text></DataTable.Cell>
-					</DataTable.Row>
-					<DataTable.Row>
-						<DataTable.Cell>Sertifikat</DataTable.Cell>
-						<DataTable.Cell><Text style={{ color: COLORS.darkgray }} >SHM</Text></DataTable.Cell>
-					</DataTable.Row>
-					<DataTable.Row>
-						<DataTable.Cell>Status</DataTable.Cell>
-						<DataTable.Cell><Text style={{ color: COLORS.darkgray }} >{getPropertyStatus(itemDetail.status)}</Text></DataTable.Cell>
-					</DataTable.Row>
+					{itemDetail.lantai &&
+						<DataTable.Row>
+							<DataTable.Cell>Jumlah Lantai</DataTable.Cell>
+							<DataTable.Cell>
+								<Text style={{ color: COLORS.darkgray }}>
+									{itemDetail.lantai}
+								</Text>
+							</DataTable.Cell>
+						</DataTable.Row>
+					}
+					{itemDetail.certificate &&
+						<DataTable.Row>
+							<DataTable.Cell>Sertifikat</DataTable.Cell>
+							<DataTable.Cell>
+								<Text style={{ color: COLORS.darkgray }} >
+									{itemDetail.certificate}
+								</Text>
+							</DataTable.Cell>
+						</DataTable.Row>
+					}
+					{itemDetail.status &&
+						<DataTable.Row>
+							<DataTable.Cell>Status</DataTable.Cell>
+							<DataTable.Cell>
+								<Text style={{ color: COLORS.darkgray }} >
+									{getPropertyStatus(itemDetail.status)}
+								</Text>
+							</DataTable.Cell>
+						</DataTable.Row>
+					}
+					{itemDetail.condition &&
+						<DataTable.Row>
+							<DataTable.Cell>Kondisi</DataTable.Cell>
+							<DataTable.Cell>
+								<Text style={{ color: COLORS.darkgray }} >
+									{itemDetail.condition}
+								</Text>
+							</DataTable.Cell>
+						</DataTable.Row>
+					}
 				</DataTable>
-
 			</Card>
 		)
 	}
 	function renderMap() {
 		return (
-			<MapLoc />
+			<MapLoc address={itemDetail.address} />
 		)
 	}
 	return (
 		<SafeAreaView >
-			{ loading ? <ActivityIndicator animating={true} color={Colors.blue300} /> :  
-			<ScrollView
-				showsVerticalScrollIndicator={false}
-			>
-				{renderContent()}
-				{renderBriefDesctiption()}
-				{renderInformation()}
-				{renderMap()}
-			</ScrollView>
+			{ loading ? <ActivityIndicator animating={true} color={Colors.blue300} /> :
+				<ScrollView
+					showsVerticalScrollIndicator={false}
+				>
+					{renderContent()}
+					{renderBriefDesctiption()}
+					{renderInformation()}
+					{renderMap()}
+				</ScrollView>
 			}
 		</SafeAreaView>
 	)
